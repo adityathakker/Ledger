@@ -1,7 +1,7 @@
 package ledger;
 
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -13,8 +13,7 @@ public final class DiscoveryUtil {
     public static InetSocketAddress getDiscoveryNode() {
         final Properties properties = new Properties();
         try {
-            InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(LedgerConstants.CONFIG_PATH);
-            properties.load(stream);
+            properties.load(new FileReader(LedgerConstants.CONFIG_PATH));
             final String address = properties.getProperty(LedgerConstants.CONFIG_DISCOVERY_PORT_KEY);
             final String[] tokens = address.split(":");
             return new InetSocketAddress(tokens[0], Integer.parseInt(tokens[1]));
