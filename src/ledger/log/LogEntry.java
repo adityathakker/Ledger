@@ -1,4 +1,4 @@
-package log;
+package ledger.log;
 
 import java.util.Objects;
 

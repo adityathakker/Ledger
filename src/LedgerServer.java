@@ -1,3 +1,8 @@
+import ledger.DiscoveryUtil;
+import ledger.Ledger;
+import ledger.LedgerConstants;
+import ledger.LedgerImpl;
+
 import java.net.InetAddress;
 import java.rmi.Naming;
 import java.rmi.registry.LocateRegistry;
@@ -21,7 +26,7 @@ public class LedgerServer {
             Naming.rebind(myAddress, ledger);
 
             if (!DiscoveryUtil.registerWithDiscoveryNode(myAddress, ledger)) {
-                System.out.println("Registry with Discovery Node Failed!");
+                System.out.println("Registry with ledger.Discovery Node Failed!");
             }
         } catch (Exception e) {
             System.out.println("Trouble: " + e.getMessage());

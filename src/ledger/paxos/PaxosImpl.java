@@ -1,6 +1,6 @@
-package paxos;
+package ledger.paxos;
 
-import log.LogEntry;
+import ledger.log.LogEntry;
 
 import java.rmi.RemoteException;
 

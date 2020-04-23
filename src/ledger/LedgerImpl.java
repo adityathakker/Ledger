@@ -1,11 +1,13 @@
-import log.LogEntry;
-import paxos.Commitment;
-import paxos.Promise;
+package ledger;
+
+import ledger.log.LogEntry;
+import ledger.paxos.Commitment;
+import ledger.paxos.Promise;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -13,7 +15,7 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
     private final int port;
     private final Registry registry;
 
-    protected LedgerImpl(final int port, final Registry registry) throws RemoteException {
+    public LedgerImpl(final int port, final Registry registry) throws RemoteException {
         super(port);
         this.port = port;
         this.registry = registry;
@@ -92,8 +94,13 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
     @Override
     public List<String> listServers() {
         try {
-            final String[] hosts = this.registry.list();
-            return Arrays.asList(Arrays.copyOfRange(hosts, 1, hosts.length));
+            final List<String> servers = new ArrayList<>();
+            for (String host : this.registry.list()) {
+                if (host.equals(LedgerConstants.NAME))
+                    continue;
+                servers.add(host);
+            }
+            return servers;
         } catch (RemoteException e) {
             return null;
         }

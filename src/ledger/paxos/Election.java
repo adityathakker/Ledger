@@ -1,4 +1,4 @@
-package paxos;
+package ledger.paxos;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

@@ -1,6 +1,8 @@
-import log.LogEntry;
-import paxos.Election;
-import paxos.Paxos;
+package ledger;
+
+import ledger.log.LogEntry;
+import ledger.paxos.Election;
+import ledger.paxos.Paxos;
 
 import java.rmi.RemoteException;
 import java.util.List;
