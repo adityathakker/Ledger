@@ -10,9 +10,9 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 import java.util.Map;
 
-public class LedgerImpl extends UnicastRemoteObject implements Log, Paxos, Discovery, Election {
+public class LedgerImpl extends UnicastRemoteObject implements Ledger{
 
-    protected LedgerImpl(final int port) throws RemoteException {
+    public LedgerImpl(int port) throws RemoteException {
         super(port);
     }
 
@@ -77,12 +77,12 @@ public class LedgerImpl extends UnicastRemoteObject implements Log, Paxos, Disco
     }
 
     @Override
-    public boolean register(final String url, final LedgerImpl server) {
+    public boolean register(final String url, final Ledger server) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Map<String, LedgerImpl> list() {
+    public Map<String, Ledger> list() {
         throw new UnsupportedOperationException();
     }
 

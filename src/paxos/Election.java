@@ -1,7 +1,10 @@
 package paxos;
 
-public interface Election {
-    String getLeader();
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 
-    boolean forceMyLeadership(String serverId);
+public interface Election extends Remote {
+    String getLeader() throws RemoteException;
+
+    boolean forceMyLeadership(String serverId) throws RemoteException;
 }

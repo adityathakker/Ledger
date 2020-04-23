@@ -1,25 +1,6 @@
-import log.LogEntry;
+import log.Log;
+import paxos.Election;
+import paxos.Paxos;
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
-import java.util.List;
-
-public interface Ledger extends Remote {
-    boolean append(final LogEntry entry) throws RemoteException;
-
-    LogEntry getLatestLog() throws RemoteException;
-
-    LogEntry getLatestLog(final String serverId) throws RemoteException;
-
-    List<LogEntry> getAllLogs() throws RemoteException;
-
-    List<LogEntry> getAllLogs(final String serverId) throws RemoteException;
-
-    List<LogEntry> getLogs(final int count) throws RemoteException;
-
-    List<LogEntry> getLogs(final String serverId, final int count) throws RemoteException;
-
-    List<LogEntry> getLogsBetween(final long startTimestamp, final long endTimestamp) throws RemoteException;
-
-    List<LogEntry> getLogsBetween(final String serverId, final long startTimestamp, final long endTimestamp) throws RemoteException;
+public interface Ledger extends Log, Paxos, Discovery, Election {
 }
