@@ -8,6 +8,8 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 public interface Ledger extends Paxos, Discovery, Election {
+    String getAddress() throws RemoteException;
+
     boolean append(final LogEntry entry) throws RemoteException;
 
     LogEntry getLatestLog() throws RemoteException;

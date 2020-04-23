@@ -2,6 +2,7 @@ import ledger.DiscoveryUtil;
 import ledger.Ledger;
 import ledger.LedgerConstants;
 import ledger.LedgerImpl;
+import ledger.paxos.ElectionUtil;
 
 import java.net.InetAddress;
 import java.rmi.Naming;
@@ -21,13 +22,18 @@ public class LedgerServer {
         try {
             final Registry registry = LocateRegistry.createRegistry(port);
 
-            final Ledger ledger = new LedgerImpl(port, registry);
+            final Ledger ledger = new LedgerImpl(InetAddress.getLocalHost().getHostName(), port, registry);
             final String myAddress = String.format(LedgerConstants.URL_FORMAT, InetAddress.getLocalHost().getHostName(), port);
             Naming.rebind(myAddress, ledger);
 
             if (!DiscoveryUtil.registerWithDiscoveryNode(myAddress, ledger)) {
-                System.out.println("Registry with ledger.Discovery Node Failed!");
+                System.out.println("Registration with Discovery Node Failed!");
             }
+
+            if (!ElectionUtil.setLeadershipToAll(myAddress)) {
+                System.out.println("Setting Leadership Failed!");
+            }
+            System.out.println("Server Ready!");
         } catch (Exception e) {
             System.out.println("Trouble: " + e.getMessage());
         }

@@ -2,8 +2,12 @@ package ledger;
 
 import ledger.log.LogEntry;
 import ledger.paxos.Commitment;
+import ledger.paxos.ElectionUtil;
 import ledger.paxos.Promise;
 
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -12,13 +16,22 @@ import java.util.List;
 
 
 public class LedgerImpl extends UnicastRemoteObject implements Ledger {
+    private final String hostname;
     private final int port;
     private final Registry registry;
+    private Ledger currentLeader;
 
-    public LedgerImpl(final int port, final Registry registry) throws RemoteException {
+    public LedgerImpl(final String hostname, final int port, final Registry registry) throws RemoteException {
         super(port);
+        this.hostname = hostname;
         this.port = port;
         this.registry = registry;
+        this.currentLeader = this;
+    }
+
+    @Override
+    public String getAddress() throws RemoteException {
+        return hostname + ":" + port;
     }
 
     @Override
@@ -107,12 +120,23 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
     }
 
     @Override
-    public String getLeader() {
-        throw new UnsupportedOperationException();
+    public String getLeader() throws RemoteException {
+        return this.currentLeader.getAddress();
     }
 
     @Override
-    public boolean forceMyLeadership(final String serverId) {
-        throw new UnsupportedOperationException();
+    public boolean setLeader(final String serverAddress) throws RemoteException {
+        try {
+            this.currentLeader = (Ledger) Naming.lookup(serverAddress);
+            System.out.println(String.format("Setting %s as leader", serverAddress));
+
+            if (getAddress().compareTo(this.currentLeader.getAddress()) > 0) {
+                return ElectionUtil.setLeadershipToAll(getAddress());
+            }
+
+            return true;
+        } catch (NotBoundException | MalformedURLException e) {
+            return false;
+        }
     }
 }
