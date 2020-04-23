@@ -13,6 +13,12 @@ public class LogEntry {
         this.serverId = serverId;
     }
 
+    public LogEntry(long timestamp, String serverId, String value) {
+        this.timestamp = timestamp;
+        this.serverId = serverId;
+        this.value = value;
+    }
+
     public long getTimestamp() {
         return timestamp;
     }

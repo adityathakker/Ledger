@@ -1,12 +1,31 @@
 package ledger.log;
 
+import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class LogImpl implements Log {
+    private final String path;
+
+    public LogImpl(String path) throws IOException {
+        this.path = path;
+        final File logFile = new File(path);
+        if (!logFile.exists()) {
+            logFile.createNewFile();
+        }
+    }
 
     @Override
     public boolean append(final LogEntry entry) {
-        throw new UnsupportedOperationException();
+        try {
+            final BufferedWriter writer = new BufferedWriter(new FileWriter(path, true));
+            writer.newLine();
+            writer.write(String.format("%d,%s,%s", entry.getTimestamp(), entry.getServerId(), entry.getValue()));
+            writer.close();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     @Override
@@ -21,7 +40,22 @@ public class LogImpl implements Log {
 
     @Override
     public List<LogEntry> getAllLogs() {
-        throw new UnsupportedOperationException();
+        List<LogEntry> logs = new ArrayList<>();
+        try {
+            final BufferedReader reader = new BufferedReader(new FileReader(
+                    path));
+            String line = reader.readLine();
+            while (line != null) {
+                String[] tokens = line.split(",");
+                logs.add(new LogEntry(Long.parseLong(tokens[0]), tokens[1], tokens[2]));
+                // read next line
+                line = reader.readLine();
+            }
+            reader.close();
+        } catch (IOException e) {
+            return null;
+        }
+        return logs;
     }
 
     @Override
