@@ -26,16 +26,22 @@ public class LedgerServer {
             final String myAddress = String.format(LedgerConstants.URL_FORMAT, InetAddress.getLocalHost().getHostName(), port);
             Naming.rebind(myAddress, ledger);
 
+            // register this server with discoveryNode
             if (!DiscoveryUtil.registerWithDiscoveryNode(myAddress, ledger)) {
                 System.out.println("Registration with Discovery Node Failed!");
+                System.exit(1);
             }
 
+            // force my leadership over others. Eventually, the best leader will be elected
+            // as it will force it's leadership upon others
             if (!ElectionUtil.setLeadershipToAll(myAddress)) {
                 System.out.println("Setting Leadership Failed!");
             }
+
+            // once leadership and registry things are over, server is ready
             System.out.println("Server Ready!");
         } catch (Exception e) {
-            System.out.println("Trouble: " + e.getMessage());
+            System.out.println("Error: " + e.getMessage());
         }
     }
 

@@ -109,6 +109,7 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
         try {
             final List<String> servers = new ArrayList<>();
             for (String host : this.registry.list()) {
+                // weird localhost name by-default appears in all lists. So removing that
                 if (host.equals(LedgerConstants.NAME))
                     continue;
                 servers.add(host);
@@ -127,9 +128,11 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
     @Override
     public boolean setLeader(final String serverAddress) throws RemoteException {
         try {
+            // set the serverAddress as leader
             this.currentLeader = (Ledger) Naming.lookup(serverAddress);
-            System.out.println(String.format("Setting %s as leader", serverAddress));
+            System.out.println(String.format("New Leader is %s", serverAddress));
 
+            // check if my address is bigger than who I choose my leader as, if yes then force my leadership upon others
             if (getAddress().compareTo(this.currentLeader.getAddress()) > 0) {
                 return ElectionUtil.setLeadershipToAll(getAddress());
             }

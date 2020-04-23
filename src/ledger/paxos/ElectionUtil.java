@@ -11,6 +11,10 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
 public class ElectionUtil {
+
+    /**
+     * Goes through all registered servers and forces them to set their leader as serverAddress
+     */
     public static boolean setLeadershipToAll(String serverAddress) {
         System.out.println(String.format("Forcing %s leadership onto others", serverAddress));
         try {
