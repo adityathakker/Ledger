@@ -4,13 +4,22 @@ import ledger.log.LogEntry;
 import ledger.paxos.Election;
 import ledger.paxos.Paxos;
 
+import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
 
-public interface Ledger extends Paxos, Discovery, Election {
+public interface Ledger extends Paxos, Discovery, Election, Remote {
     String getAddress() throws RemoteException;
 
-    boolean append(final LogEntry entry) throws RemoteException;
+    LogEntry getLastAcceptedLogEntry() throws RemoteException;
+
+    long getCurrentId() throws RemoteException;
+
+    void setCurrentId(long id) throws RemoteException;
+
+    boolean append(final LogEntry entry) throws RemoteException, MalformedURLException, NotBoundException;
 
     LogEntry getLatestLog() throws RemoteException;
 

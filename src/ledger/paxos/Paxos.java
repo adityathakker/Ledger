@@ -10,5 +10,5 @@ public interface Paxos extends Remote {
 
     Commitment accept(final long proposalId, final LogEntry logEntry) throws RemoteException;
 
-    boolean learn(final long proposalId) throws RemoteException;
+    boolean learn(final long proposalId, LogEntry entry) throws RemoteException;
 }
