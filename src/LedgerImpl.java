@@ -1,19 +1,22 @@
-import log.Log;
 import log.LogEntry;
 import paxos.Commitment;
-import paxos.Election;
-import paxos.Paxos;
 import paxos.Promise;
 
 import java.rmi.RemoteException;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
-public class LedgerImpl extends UnicastRemoteObject implements Ledger{
 
-    public LedgerImpl(int port) throws RemoteException {
+public class LedgerImpl extends UnicastRemoteObject implements Ledger {
+    private final int port;
+    private final Registry registry;
+
+    protected LedgerImpl(final int port, final Registry registry) throws RemoteException {
         super(port);
+        this.port = port;
+        this.registry = registry;
     }
 
     @Override
@@ -77,13 +80,23 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger{
     }
 
     @Override
-    public boolean register(final String url, final Ledger server) {
-        throw new UnsupportedOperationException();
+    public boolean registerServer(final String url, final Ledger server) {
+        try {
+            this.registry.rebind(url, server);
+            return true;
+        } catch (RemoteException e) {
+            return false;
+        }
     }
 
     @Override
-    public Map<String, Ledger> list() {
-        throw new UnsupportedOperationException();
+    public List<String> listServers() {
+        try {
+            final String[] hosts = this.registry.list();
+            return Arrays.asList(Arrays.copyOfRange(hosts, 1, hosts.length));
+        } catch (RemoteException e) {
+            return null;
+        }
     }
 
     @Override
@@ -92,7 +105,7 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger{
     }
 
     @Override
-    public boolean forceMyLeadership(String serverId) {
+    public boolean forceMyLeadership(final String serverId) {
         throw new UnsupportedOperationException();
     }
 }

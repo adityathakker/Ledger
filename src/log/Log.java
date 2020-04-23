@@ -1,27 +1,26 @@
 package log;
 
-import java.rmi.RemoteException;
 import java.util.List;
 
 /**
  * This interface defines operations that our log should be able to perform.
  */
 public interface Log {
-    boolean append(final LogEntry entry) throws RemoteException;
+    boolean append(final LogEntry entry);
 
-    LogEntry getLatestLog() throws RemoteException;
+    LogEntry getLatestLog();
 
-    LogEntry getLatestLog(final String serverId) throws RemoteException;
+    LogEntry getLatestLog(final String serverId);
 
-    List<LogEntry> getAllLogs() throws RemoteException;
+    List<LogEntry> getAllLogs();
 
-    List<LogEntry> getAllLogs(final String serverId) throws RemoteException;
+    List<LogEntry> getAllLogs(final String serverId);
 
-    List<LogEntry> getLogs(final int count) throws RemoteException;
+    List<LogEntry> getLogs(final int count);
 
-    List<LogEntry> getLogs(final String serverId, final int count) throws RemoteException;
+    List<LogEntry> getLogs(final String serverId, final int count);
 
-    List<LogEntry> getLogsBetween(final long startTimestamp, final long endTimestamp) throws RemoteException;
+    List<LogEntry> getLogsBetween(final long startTimestamp, final long endTimestamp);
 
-    List<LogEntry> getLogsBetween(final String serverId, final long startTimestamp, final long endTimestamp) throws RemoteException;
+    List<LogEntry> getLogsBetween(final String serverId, final long startTimestamp, final long endTimestamp);
 }

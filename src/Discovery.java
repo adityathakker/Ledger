@@ -1,9 +1,9 @@
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.Map;
+import java.util.List;
 
 public interface Discovery extends Remote {
-    boolean register(String url, Ledger server) throws RemoteException;
+    boolean registerServer(final String url, final Ledger server) throws RemoteException;
 
-    Map<String, Ledger> list() throws RemoteException;
+    List<String> listServers() throws RemoteException;
 }
