@@ -77,10 +77,15 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
                 this.lastPromisedProposalId = proposalId;
                 continue;
             }
-            final Ledger tempLedger = (Ledger) Naming.lookup(address);
-            Promise current_Promise = tempLedger.propose(proposalId, this.lastAcceptedLogEntry);
-            if (current_Promise != null) {
-                promiseList.add(address);
+            try {
+                final Ledger tempLedger = (Ledger) Naming.lookup(address);
+                Promise current_Promise = tempLedger.propose(proposalId, this.lastAcceptedLogEntry);
+                if (current_Promise != null) {
+                    promiseList.add(address);
+                }
+            }
+            catch (RemoteException e){
+                System.out.println(String.format("Server with address: %s is down", address));
             }
         }
 
@@ -92,10 +97,15 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
 
         List<Commitment> commitmentList = new ArrayList<>();
         for (String address : promiseList) {
-            final Ledger tempLedger = (Ledger) Naming.lookup(address);
-            Commitment commitment = tempLedger.accept(proposalId, entry);
-            if (commitment != null) {
-                commitmentList.add(commitment);
+            try {
+                final Ledger tempLedger = (Ledger) Naming.lookup(address);
+                Commitment commitment = tempLedger.accept(proposalId, entry);
+                if (commitment != null) {
+                    commitmentList.add(commitment);
+                }
+            }
+            catch (RemoteException e) {
+                System.out.println(String.format("Server with address: %s is down", address));
             }
         }
 
@@ -111,16 +121,26 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
                 result = result & this.learn(proposalId, entry);
                 continue;
             }
-            final Ledger tempLedger = (Ledger) Naming.lookup(address);
-            result = result & tempLedger.learn(proposalId, entry);
+            try {
+                final Ledger tempLedger = (Ledger) Naming.lookup(address);
+                result = result & tempLedger.learn(proposalId, entry);
+            }
+            catch (RemoteException e){
+                System.out.println(String.format("Server with address: %s is down", address));
+            }
         }
 //        System.out.println("Returning Result from Append: " + result);
         return result;
     }
 
     @Override
+    public Log getLogFile(){
+        return this.log;
+    }
+
+    @Override
     public LogEntry getLatestLog() {
-        throw new UnsupportedOperationException();
+        return this.log.getLatestLog();
     }
 
     @Override

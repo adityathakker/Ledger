@@ -1,6 +1,15 @@
 package ledger.log;
 
+import ledger.DiscoveryUtil;
+import ledger.Ledger;
+import ledger.LedgerConstants;
+
 import java.io.*;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,13 +38,22 @@ public class LogImpl implements Log {
     }
 
     @Override
+    public Log getLogFile() {
+        return this;
+    }
+
+    @Override
     public LogEntry getLatestLog() {
-        throw new UnsupportedOperationException();
+        List<LogEntry> logs= this.getAllLogs();
+        if(logs.size() == 0) {
+            return null;
+        }
+        return logs.get(logs.size()-1);
     }
 
     @Override
     public LogEntry getLatestLog(final String serverId) {
-        throw new UnsupportedOperationException();
+      throw new UnsupportedOperationException();
     }
 
     @Override

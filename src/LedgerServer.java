@@ -1,13 +1,17 @@
+import com.google.common.base.Preconditions;
 import ledger.DiscoveryUtil;
 import ledger.Ledger;
 import ledger.LedgerConstants;
 import ledger.LedgerImpl;
+import ledger.log.LogEntry;
 import ledger.paxos.ElectionUtil;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.rmi.Naming;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.List;
 
 public class LedgerServer {
     public static void main(String[] args) {
@@ -40,6 +44,31 @@ public class LedgerServer {
 
             // once leadership and registry things are over, server is ready
             System.out.println("Server Ready!");
+
+            //handles restart of a server after it is down.
+
+            InetSocketAddress addr = DiscoveryUtil.getDiscoveryNode();
+            final String discoveryNodeAddress = String.format(LedgerConstants.URL_FORMAT, addr.getHostName(), addr.getPort());
+            final Ledger discoveryLedger = (Ledger)Naming.lookup(discoveryNodeAddress);
+
+            LogEntry latestLog = ledger.getLatestLog();
+            List<LogEntry> discoveryAllLogs = discoveryLedger.getAllLogs();
+
+            // find entry where the server went down
+
+            int i=0;
+            for(i = 0;i<discoveryAllLogs.size();i++){
+                if(latestLog.equals(discoveryAllLogs.get(i))) {
+                    i++;
+                    break;
+                }
+            }
+
+            if(ledger.getLatestLog()!=discoveryLedger.getLatestLog()){
+                for(;i<discoveryLedger.getAllLogs().size();i++) {
+                    ledger.getLogFile().append(discoveryAllLogs.get(i));
+                }
+            }
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
         }

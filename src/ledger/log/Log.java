@@ -8,6 +8,8 @@ import java.util.List;
 public interface Log {
     boolean append(final LogEntry entry);
 
+    Log getLogFile();
+
     LogEntry getLatestLog();
 
     LogEntry getLatestLog(final String serverId);

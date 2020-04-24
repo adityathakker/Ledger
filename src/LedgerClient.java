@@ -6,6 +6,7 @@ import ledger.log.LogEntry;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
+import java.rmi.ConnectException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -20,15 +21,25 @@ public class LedgerClient {
                             discoveryNodeAddress.getHostName(),
                             discoveryNodeAddress.getPort()));
             for (String address : discoveryNodeLedger.listServers()) {
-                final Ledger tempLedger = (Ledger) Naming.lookup(address);
-                tempLedger.append(new LogEntry(address + "123", address));
+                try {
+                    final Ledger tempLedger = (Ledger) Naming.lookup(address);
+                    tempLedger.append(new LogEntry(address + "123", address));
+                }
+                catch (ConnectException e){
+                    System.out.println(String.format("Server with address: %s is down", address));
+                }
             }
 
             for (String address : discoveryNodeLedger.listServers()) {
                 System.out.println("Printing from Address: " + address);
-                final Ledger tempLedger = (Ledger) Naming.lookup(address);
-                System.out.println(tempLedger.getAllLogs());
-                System.out.println("\n");
+                try {
+                    final Ledger tempLedger = (Ledger) Naming.lookup(address);
+                    System.out.println(tempLedger.getAllLogs());
+                    System.out.println("\n");
+                }
+                catch (ConnectException e){
+                    System.out.println(String.format("Server with address: %s is down", address));
+                }
             }
         }
 
