@@ -13,12 +13,6 @@ import java.util.List;
 public interface Ledger extends Paxos, Discovery, Election, Remote {
     String getAddress() throws RemoteException;
 
-    LogEntry getLastAcceptedLogEntry() throws RemoteException;
-
-    long getCurrentId() throws RemoteException;
-
-    void setCurrentId(long id) throws RemoteException;
-
     boolean append(final LogEntry entry) throws RemoteException, MalformedURLException, NotBoundException;
 
     LogEntry getLatestLog() throws RemoteException;

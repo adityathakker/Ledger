@@ -6,9 +6,9 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface Paxos extends Remote {
-    Promise propose(final long proposalId, final LogEntry lastAcceptedLogEntry) throws RemoteException;
+    Promise propose(final double proposalId, final LogEntry lastAcceptedLogEntry) throws RemoteException;
 
-    Commitment accept(final long proposalId, final LogEntry logEntry) throws RemoteException;
+    Commitment accept(final double proposalId, final LogEntry logEntry) throws RemoteException;
 
-    boolean learn(final long proposalId, LogEntry entry) throws RemoteException;
+    boolean learn(final double proposalId, final LogEntry logEntry) throws RemoteException;
 }

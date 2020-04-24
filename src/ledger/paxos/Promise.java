@@ -2,20 +2,23 @@ package ledger.paxos;
 
 import ledger.log.LogEntry;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class Promise {
+public class Promise implements Serializable {
+    private static final long serialVersionUID = 15l;
+
     private String serverId;
-    private long proposalId;
+    private double proposalId;
     private LogEntry lastAcceptedLogEntry;
 
-    public Promise(final String serverId, final long proposalId, final LogEntry lastAcceptedLogEntry) {
+    public Promise(final String serverId, final double proposalId, final LogEntry lastAcceptedLogEntry) {
         this.serverId = serverId;
         this.proposalId = proposalId;
         this.lastAcceptedLogEntry = lastAcceptedLogEntry;
     }
 
-    public Promise(String serverId, long proposalId) {
+    public Promise(String serverId, double proposalId) {
         this.serverId = serverId;
         this.proposalId = proposalId;
     }
@@ -24,7 +27,7 @@ public class Promise {
         return serverId;
     }
 
-    public long getProposalId() {
+    public double getProposalId() {
         return proposalId;
     }
 

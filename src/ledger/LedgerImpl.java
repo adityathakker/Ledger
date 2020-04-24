@@ -1,10 +1,13 @@
 package ledger;
 
+import ledger.log.Log;
 import ledger.log.LogEntry;
+import ledger.log.LogImpl;
 import ledger.paxos.Commitment;
 import ledger.paxos.ElectionUtil;
 import ledger.paxos.Promise;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -14,7 +17,6 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 public class LedgerImpl extends UnicastRemoteObject implements Ledger {
@@ -22,15 +24,21 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
     private final int port;
     private final Registry registry;
     private Ledger currentLeader;
-    private long currentId;
+    private double currentProposalId;
+    private double lastPromisedProposalId;
     private LogEntry lastAcceptedLogEntry;
+    private Log log;
 
-    public LedgerImpl(final String hostname, final int port, final Registry registry) throws RemoteException {
+    public LedgerImpl(final String hostname, final int port, final Registry registry) throws IOException {
         super(port);
         this.hostname = hostname;
         this.port = port;
         this.registry = registry;
         this.currentLeader = this;
+        this.currentProposalId = (System.currentTimeMillis() + port / 10000.0);
+        this.lastAcceptedLogEntry = null;
+        this.lastPromisedProposalId = this.currentProposalId;
+        this.log = new LogImpl(port + ".txt");
     }
 
     @Override
@@ -38,72 +46,72 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
         return hostname + ":" + port;
     }
 
-    @Override
-    public long getCurrentId() throws RemoteException {
-        return currentId;
-    }
-
-    @Override
-    public void setCurrentId(long id) throws RemoteException {
-        this.currentId = id;
-    }
-
-    @Override
-    public LogEntry getLastAcceptedLogEntry() throws RemoteException {
-        return lastAcceptedLogEntry;
+    private void updateCurrentProposalId() {
+        this.currentProposalId = (System.currentTimeMillis() + port / 10000.0);
     }
 
     @Override
     public boolean append(final LogEntry entry) throws RemoteException, MalformedURLException, NotBoundException {
+        if (!this.currentLeader.getAddress().equals(getAddress())) {
+            System.out.println(String.format("Forwarding the operation to leader %s", this.currentLeader.getAddress()));
+            return this.currentLeader.append(entry);
+        }
+        System.out.println("Append Operation Started");
         final InetSocketAddress discoveryAddress = DiscoveryUtil.getDiscoveryNode();
-        long proposalId = this.getCurrentId()*2 + 1;
+        final double proposalId = this.currentProposalId;
+        updateCurrentProposalId();
 
-        if (discoveryAddress != null) {
+        if (discoveryAddress == null) {
+            return false;
+        }
 
-            ArrayList<Promise> promiseList = new ArrayList<>();
-            final Ledger discoveryLedger = (Ledger) Naming.lookup(String.format(LedgerConstants.URL_FORMAT,
-                    discoveryAddress.getHostName(),
-                    discoveryAddress.getPort()));
+        List<String> promiseList = new ArrayList<>();
+        final Ledger discoveryLedger = (Ledger) Naming.lookup(String.format(LedgerConstants.URL_FORMAT,
+                discoveryAddress.getHostName(),
+                discoveryAddress.getPort()));
 
-            // proposal stage
-            for (String address : discoveryLedger.listServers()) {
-                final Ledger tempLedger = (Ledger) Naming.lookup(address);
-                Promise current_Promise = tempLedger.propose(proposalId, tempLedger.getLastAcceptedLogEntry());
-                if(current_Promise!=null) {
-                    promiseList.add(current_Promise);
-                }
+        // proposal stage
+        for (String address : discoveryLedger.listServers()) {
+            if (address.equals(getAddress())) {
+                continue;
             }
-
-            if (promiseList.size() < discoveryLedger.listServers().size() / 2) {
-                return false;
-            } else {
-                // send accept
-                ArrayList<Commitment> commitmentList = new ArrayList<>();
-
-                List<String> promiseAddressList = promiseList.stream().map(Promise::getServerId).collect(Collectors.toList());
-                for (String port : promiseAddressList) {
-                    final Ledger tempLedger = (Ledger) Naming.lookup(String.format("rmi://%s:%s/Ledger",
-                            DiscoveryUtil.getDiscoveryNode().getHostName(),port));
-                    Commitment commitment = tempLedger.accept(proposalId, entry);
-                    if (commitment != null) {
-                        commitmentList.add(commitment);
-                    }
-                }
-
-                if (commitmentList.size() > discoveryLedger.listServers().size() / 2) {
-                    // announce the values to everyone.
-                    for (String address : discoveryLedger.listServers()) {
-                        final Ledger tempLedger = (Ledger) Naming.lookup(address);
-                        tempLedger.learn(proposalId, entry);
-                    }
-                } else {
-                    return false;
-                }
-
+            final Ledger tempLedger = (Ledger) Naming.lookup(address);
+            Promise current_Promise = tempLedger.propose(proposalId, this.lastAcceptedLogEntry);
+            if (current_Promise != null) {
+                promiseList.add(address);
             }
         }
-//        throw new UnsupportedOperationException();
-        return false;
+
+        //todo: consider yourself as a participant in the count
+        if (promiseList.size() < discoveryLedger.listServers().size() / 2) {
+            System.out.println("Didn't get a majority in Proposal Phase");
+            return false;
+        }
+
+        List<Commitment> commitmentList = new ArrayList<>();
+        for (String address : promiseList) {
+            final Ledger tempLedger = (Ledger) Naming.lookup(address);
+            Commitment commitment = tempLedger.accept(proposalId, entry);
+            if (commitment != null) {
+                commitmentList.add(commitment);
+            }
+        }
+
+        if (commitmentList.size() < discoveryLedger.listServers().size() / 2) {
+            // announce the values to everyone.
+            System.out.println("Didn't get a majority in Acceptance Phase");
+            return false;
+        }
+
+        boolean result = true;
+        for (String address : discoveryLedger.listServers()) {
+            if (address.equals(getAddress())) {
+                result = result & this.learn(proposalId, entry);
+            }
+            final Ledger tempLedger = (Ledger) Naming.lookup(address);
+            result = result & tempLedger.learn(proposalId, entry);
+        }
+        return result;
     }
 
     @Override
@@ -118,7 +126,7 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
 
     @Override
     public List<LogEntry> getAllLogs() {
-        throw new UnsupportedOperationException();
+        return log.getAllLogs();
     }
 
     @Override
@@ -147,22 +155,25 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
     }
 
     @Override
-    public Promise propose(final long proposalId, final LogEntry lastAcceptedLogEntry) throws RemoteException {
-        if (this.getCurrentId() > proposalId) {
+    public Promise propose(final double proposalId, final LogEntry lastAcceptedLogEntry) throws RemoteException {
+        System.out.println(String.format("Propose Called with ProposalId: %f and LastLogEntry:%s",
+                proposalId, lastAcceptedLogEntry != null ? lastAcceptedLogEntry.toString() : "NULL"));
+        if (this.currentProposalId >= proposalId) {
             return null;
         } else {
-            this.currentId = proposalId;
+            this.lastPromisedProposalId = proposalId;
             if (this.lastAcceptedLogEntry == null) {
                 return new Promise(this.getAddress(), proposalId);
             } else {
-                return new Promise(this.getAddress(), proposalId, this.getLastAcceptedLogEntry());
+                return new Promise(this.getAddress(), proposalId, this.lastAcceptedLogEntry);
             }
         }
     }
 
     @Override
-    public Commitment accept(final long proposalId, final LogEntry logEntry) throws RemoteException {
-        if (this.getCurrentId() > proposalId) {
+    public Commitment accept(final double proposalId, final LogEntry logEntry) throws RemoteException {
+        System.out.println(String.format("Accept Called with ProposalId: %f and LogEntry:%s", proposalId, logEntry.toString()));
+        if (this.currentProposalId >= proposalId || lastPromisedProposalId != proposalId) {
             return null;
         } else {
             this.lastAcceptedLogEntry = logEntry;
@@ -171,11 +182,15 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
     }
 
     @Override
-    public boolean learn(final long proposalId, LogEntry entry) throws RemoteException {
-        this.currentId = proposalId;
-        this.lastAcceptedLogEntry = entry;
+    public boolean learn(final double proposalId, final LogEntry logEntry) throws RemoteException {
+        System.out.println(String.format("Learn Called with ProposalId: %f", proposalId));
         // append to log
-        return true;
+        if (proposalId == lastPromisedProposalId) {
+            this.lastAcceptedLogEntry = logEntry;
+            return log.append(logEntry);
+        } else {
+            return false;
+        }
     }
 
     @Override

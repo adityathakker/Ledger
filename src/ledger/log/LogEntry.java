@@ -1,8 +1,10 @@
 package ledger.log;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class LogEntry {
+public class LogEntry implements Serializable {
+    private static final long serialVersionUID = 14l;
     private long timestamp;
     private String serverId;
     private String value;

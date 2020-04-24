@@ -2,14 +2,17 @@ package ledger.paxos;
 
 import ledger.log.LogEntry;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class Commitment {
+public class Commitment implements Serializable {
+    private static final long serialVersionUID = 16l;
+
     private String serverId;
-    private long proposalId;
+    private double proposalId;
     private LogEntry logEntry;
 
-    public Commitment(final String serverId, final long proposalId, final LogEntry logEntry) {
+    public Commitment(final String serverId, final double proposalId, final LogEntry logEntry) {
         this.serverId = serverId;
         this.proposalId = proposalId;
         this.logEntry = logEntry;
@@ -19,7 +22,7 @@ public class Commitment {
         return serverId;
     }
 
-    public long getProposalId() {
+    public double getProposalId() {
         return proposalId;
     }
 

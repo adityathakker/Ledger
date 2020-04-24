@@ -17,6 +17,7 @@ public class LogImpl implements Log {
 
     @Override
     public boolean append(final LogEntry entry) {
+        System.out.println(String.format("Append Called with Entry: %s", entry.toString()));
         try {
             final BufferedWriter writer = new BufferedWriter(new FileWriter(path, true));
             writer.newLine();
@@ -46,6 +47,8 @@ public class LogImpl implements Log {
                     path));
             String line = reader.readLine();
             while (line != null) {
+                if (line.length() <= 1)
+                    continue;
                 String[] tokens = line.split(",");
                 logs.add(new LogEntry(Long.parseLong(tokens[0]), tokens[1], tokens[2]));
                 // read next line
