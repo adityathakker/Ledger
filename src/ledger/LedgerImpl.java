@@ -4,7 +4,6 @@ import ledger.log.Log;
 import ledger.log.LogEntry;
 import ledger.log.LogImpl;
 import ledger.paxos.Commitment;
-import ledger.paxos.ElectionUtil;
 import ledger.paxos.Promise;
 
 import java.io.IOException;
@@ -13,6 +12,7 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.UnknownHostException;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
@@ -230,17 +230,34 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
     }
 
     @Override
-    public boolean setLeader(final String serverAddress) throws RemoteException {
+    public boolean selectBestLeader() throws RemoteException {
+
+        final InetSocketAddress discoveryNodeAddress = DiscoveryUtil.getDiscoveryNode();
+        if (discoveryNodeAddress == null) {
+            return false;
+        }
+        final Ledger discoveryNodeLedger;
         try {
-            // set the serverAddress as leader
-            this.currentLeader = (Ledger) Naming.lookup(serverAddress);
-//            System.out.println(String.format("New Leader is %s", serverAddress));
-
-            // check if my address is bigger than who I choose my leader as, if yes then force my leadership upon others
-            if (getAddress().compareTo(this.currentLeader.getAddress()) > 0) {
-                return ElectionUtil.setLeadershipToAll(getAddress());
+            discoveryNodeLedger = (Ledger) Naming.lookup(
+                    String.format(LedgerConstants.URL_FORMAT,
+                            discoveryNodeAddress.getHostName(),
+                            discoveryNodeAddress.getPort()));
+        } catch (NotBoundException | MalformedURLException e) {
+            return false;
+        }
+        String maxAddress = "";
+        for (String address : discoveryNodeLedger.listServers()) {
+            try {
+                Naming.lookup(address);
+                if (address.compareTo(maxAddress) > 0) {
+                    maxAddress = address;
+                }
+            } catch (UnknownHostException | NotBoundException | MalformedURLException ignored) {
             }
-
+        }
+        try {
+            System.out.println("Setting Leader as " + maxAddress);
+            this.currentLeader = (Ledger) Naming.lookup(maxAddress);
             return true;
         } catch (NotBoundException | MalformedURLException e) {
             return false;

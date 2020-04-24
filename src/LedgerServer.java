@@ -34,7 +34,7 @@ public class LedgerServer {
 
             // force my leadership over others. Eventually, the best leader will be elected
             // as it will force it's leadership upon others
-            if (!ElectionUtil.setLeadershipToAll(myAddress)) {
+            if (!ElectionUtil.bestLeaderForAll()) {
                 System.out.println("Setting Leadership Failed!");
             }
 
