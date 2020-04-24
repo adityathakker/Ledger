@@ -13,6 +13,7 @@ public class LedgerServer {
     public static void main(String[] args) {
         System.setProperty("sun.rmi.transport.connectionTimeout", "100");
 
+
         if (args.length != 1) {
             System.out.println("./Usage java LedgerServer [4-digit-port]\n");
             return;
@@ -23,7 +24,6 @@ public class LedgerServer {
             final Registry registry = LocateRegistry.createRegistry(port);
 
             final Ledger ledger = new LedgerImpl(InetAddress.getLocalHost().getHostName(), port, registry);
-            ledger.setCurrentId(port%1000);
             final String myAddress = String.format(LedgerConstants.URL_FORMAT, InetAddress.getLocalHost().getHostName(), port);
             Naming.rebind(myAddress, ledger);
 
