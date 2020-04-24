@@ -25,6 +25,7 @@ public class LedgerClient {
             }
 
             for (String address : discoveryNodeLedger.listServers()) {
+                System.out.println("Printing from Address: " + address);
                 final Ledger tempLedger = (Ledger) Naming.lookup(address);
                 System.out.println(tempLedger.getAllLogs());
                 System.out.println("\n");

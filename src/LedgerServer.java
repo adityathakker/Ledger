@@ -13,7 +13,6 @@ public class LedgerServer {
     public static void main(String[] args) {
         System.setProperty("sun.rmi.transport.connectionTimeout", "100");
 
-
         if (args.length != 1) {
             System.out.println("./Usage java LedgerServer [4-digit-port]\n");
             return;

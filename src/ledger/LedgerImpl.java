@@ -43,7 +43,7 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
 
     @Override
     public String getAddress() throws RemoteException {
-        return hostname + ":" + port;
+        return String.format(LedgerConstants.URL_FORMAT, hostname, port);
     }
 
     private void updateCurrentProposalId() {
@@ -53,11 +53,12 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
     @Override
     public boolean append(final LogEntry entry) throws RemoteException, MalformedURLException, NotBoundException {
         if (!this.currentLeader.getAddress().equals(getAddress())) {
-            System.out.println(String.format("Forwarding the operation to leader %s", this.currentLeader.getAddress()));
+//            System.out.println(String.format("Forwarding the operation to leader %s", this.currentLeader.getAddress()));
             return this.currentLeader.append(entry);
         }
-        System.out.println("Append Operation Started");
+//        System.out.println("Append Operation Started");
         final InetSocketAddress discoveryAddress = DiscoveryUtil.getDiscoveryNode();
+
         final double proposalId = this.currentProposalId;
         updateCurrentProposalId();
 
@@ -73,6 +74,7 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
         // proposal stage
         for (String address : discoveryLedger.listServers()) {
             if (address.equals(getAddress())) {
+                this.lastPromisedProposalId = proposalId;
                 continue;
             }
             final Ledger tempLedger = (Ledger) Naming.lookup(address);
@@ -84,7 +86,7 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
 
         //todo: consider yourself as a participant in the count
         if (promiseList.size() < discoveryLedger.listServers().size() / 2) {
-            System.out.println("Didn't get a majority in Proposal Phase");
+//            System.out.println("Didn't get a majority in Proposal Phase");
             return false;
         }
 
@@ -99,7 +101,7 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
 
         if (commitmentList.size() < discoveryLedger.listServers().size() / 2) {
             // announce the values to everyone.
-            System.out.println("Didn't get a majority in Acceptance Phase");
+//            System.out.println("Didn't get a majority in Acceptance Phase");
             return false;
         }
 
@@ -107,10 +109,12 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
         for (String address : discoveryLedger.listServers()) {
             if (address.equals(getAddress())) {
                 result = result & this.learn(proposalId, entry);
+                continue;
             }
             final Ledger tempLedger = (Ledger) Naming.lookup(address);
             result = result & tempLedger.learn(proposalId, entry);
         }
+//        System.out.println("Returning Result from Append: " + result);
         return result;
     }
 
@@ -126,6 +130,7 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
 
     @Override
     public List<LogEntry> getAllLogs() {
+//        System.out.println("Get All Logs Called");
         return log.getAllLogs();
     }
 
@@ -156,8 +161,8 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
 
     @Override
     public Promise propose(final double proposalId, final LogEntry lastAcceptedLogEntry) throws RemoteException {
-        System.out.println(String.format("Propose Called with ProposalId: %f and LastLogEntry:%s",
-                proposalId, lastAcceptedLogEntry != null ? lastAcceptedLogEntry.toString() : "NULL"));
+//        System.out.println(String.format("Propose Called with ProposalId: %f and LastLogEntry:%s",
+//                proposalId, lastAcceptedLogEntry != null ? lastAcceptedLogEntry.toString() : "NULL"));
         if (this.currentProposalId >= proposalId) {
             return null;
         } else {
@@ -172,7 +177,7 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
 
     @Override
     public Commitment accept(final double proposalId, final LogEntry logEntry) throws RemoteException {
-        System.out.println(String.format("Accept Called with ProposalId: %f and LogEntry:%s", proposalId, logEntry.toString()));
+//        System.out.println(String.format("Accept Called with ProposalId: %f and LogEntry:%s", proposalId, logEntry.toString()));
         if (this.currentProposalId >= proposalId || lastPromisedProposalId != proposalId) {
             return null;
         } else {
@@ -183,7 +188,7 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
 
     @Override
     public boolean learn(final double proposalId, final LogEntry logEntry) throws RemoteException {
-        System.out.println(String.format("Learn Called with ProposalId: %f", proposalId));
+//        System.out.println(String.format("Learn Called with ProposalId: %f", proposalId));
         // append to log
         if (proposalId == lastPromisedProposalId) {
             this.lastAcceptedLogEntry = logEntry;
@@ -229,7 +234,7 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
         try {
             // set the serverAddress as leader
             this.currentLeader = (Ledger) Naming.lookup(serverAddress);
-            System.out.println(String.format("New Leader is %s", serverAddress));
+//            System.out.println(String.format("New Leader is %s", serverAddress));
 
             // check if my address is bigger than who I choose my leader as, if yes then force my leadership upon others
             if (getAddress().compareTo(this.currentLeader.getAddress()) > 0) {

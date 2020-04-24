@@ -17,11 +17,10 @@ public class LogImpl implements Log {
 
     @Override
     public boolean append(final LogEntry entry) {
-        System.out.println(String.format("Append Called with Entry: %s", entry.toString()));
+//        System.out.println(String.format("Append Called with Entry: %s", entry.toString()));
         try {
             final BufferedWriter writer = new BufferedWriter(new FileWriter(path, true));
-            writer.newLine();
-            writer.write(String.format("%d,%s,%s", entry.getTimestamp(), entry.getServerId(), entry.getValue()));
+            writer.write(String.format("%d,%s,%s\n", entry.getTimestamp(), entry.getServerId(), entry.getValue()));
             writer.close();
             return true;
         } catch (IOException e) {
