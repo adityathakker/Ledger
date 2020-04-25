@@ -1,15 +1,6 @@
 package ledger.log;
 
-import ledger.DiscoveryUtil;
-import ledger.Ledger;
-import ledger.LedgerConstants;
-
 import java.io.*;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,11 +43,6 @@ public class LogImpl implements Log {
     }
 
     @Override
-    public LogEntry getLatestLog(final String serverId) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
     public List<LogEntry> getAllLogs() {
         List<LogEntry> logs = new ArrayList<>();
         try {
@@ -78,28 +64,4 @@ public class LogImpl implements Log {
         return logs;
     }
 
-    @Override
-    public List<LogEntry> getAllLogs(final String serverId) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<LogEntry> getLogs(final int count) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<LogEntry> getLogs(final String serverId, final int count) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<LogEntry> getLogsBetween(final long startTimestamp, final long endTimestamp) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<LogEntry> getLogsBetween(final String serverId, final long startTimestamp, final long endTimestamp) {
-        throw new UnsupportedOperationException();
-    }
 }

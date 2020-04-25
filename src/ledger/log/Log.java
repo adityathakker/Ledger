@@ -12,17 +12,6 @@ public interface Log {
 
     LogEntry getLatestLog();
 
-    LogEntry getLatestLog(final String serverId);
-
     List<LogEntry> getAllLogs();
 
-    List<LogEntry> getAllLogs(final String serverId);
-
-    List<LogEntry> getLogs(final int count);
-
-    List<LogEntry> getLogs(final String serverId, final int count);
-
-    List<LogEntry> getLogsBetween(final long startTimestamp, final long endTimestamp);
-
-    List<LogEntry> getLogsBetween(final String serverId, final long startTimestamp, final long endTimestamp);
 }

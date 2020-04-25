@@ -20,17 +20,6 @@ public interface Ledger extends Paxos, Discovery, Election, Remote {
 
     LogEntry getLatestLog() throws RemoteException;
 
-    LogEntry getLatestLog(final String serverId) throws RemoteException;
-
     List<LogEntry> getAllLogs() throws RemoteException;
 
-    List<LogEntry> getAllLogs(final String serverId) throws RemoteException;
-
-    List<LogEntry> getLogs(final int count) throws RemoteException;
-
-    List<LogEntry> getLogs(final String serverId, final int count) throws RemoteException;
-
-    List<LogEntry> getLogsBetween(final long startTimestamp, final long endTimestamp) throws RemoteException;
-
-    List<LogEntry> getLogsBetween(final String serverId, final long startTimestamp, final long endTimestamp) throws RemoteException;
 }

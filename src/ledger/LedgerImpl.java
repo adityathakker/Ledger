@@ -144,39 +144,9 @@ public class LedgerImpl extends UnicastRemoteObject implements Ledger {
     }
 
     @Override
-    public LogEntry getLatestLog(final String serverId) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public List<LogEntry> getAllLogs() {
 //        System.out.println("Get All Logs Called");
         return log.getAllLogs();
-    }
-
-    @Override
-    public List<LogEntry> getAllLogs(final String serverId) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<LogEntry> getLogs(final int count) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<LogEntry> getLogs(final String serverId, final int count) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<LogEntry> getLogsBetween(final long startTimestamp, final long endTimestamp) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<LogEntry> getLogsBetween(final String serverId, final long startTimestamp, final long endTimestamp) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
